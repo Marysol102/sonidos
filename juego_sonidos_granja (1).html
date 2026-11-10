@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Quién vive en la granja?</title>
+<style>
+  body{margin:0;font-family:Arial,sans-serif;background:#fff8e8;color:#3d382e;text-align:center}
+  main{max-width:620px;margin:auto;padding:24px 18px}
+  h1{font-size:2rem;color:#477a45;margin:12px 0}
+  .farm{font-size:3rem;letter-spacing:8px;margin:18px 0}
+  p{font-size:1.15rem;line-height:1.5}
+  button{font-size:1.2rem;font-weight:bold;border:0;border-radius:18px;padding:16px 24px;background:#5b984f;color:white;cursor:pointer}
+  button:disabled{opacity:.55}
+  #status{min-height:3em;margin:22px 0;font-size:1.25rem;font-weight:bold}
+  #timer{font-size:1.5rem;color:#477a45;font-weight:bold}
+  .note{font-size:.9rem;color:#6e685e}
+</style>
+</head>
+<body>
+<main>
+  <div class="farm">🐮 🐷 🐔</div>
+  <h1>¿Quién vive en la granja?</h1>
+  <p>Escucha con atención. ¿Qué animal será? Después de cada sonido, descubrirás la respuesta.</p>
+  <button id="start">▶ EMPEZAR JUEGO</button>
+  <div id="status" aria-live="polite">¡Pulsa para comenzar!</div>
+  <div id="timer">02:00</div>
+  <p class="note">Actividad de escucha · 2 minutos</p>
+</main>
+<script>
+const animals = [
+  {name:"la vaca", file:"https://sfxmint.com/dl/cow-moo-02.mp3", emoji:"🐮"},
+  {name:"el cerdo", file:"https://sfxmint.com/dl/pig-oink-02.mp3", emoji:"🐷"},
+  {name:"la oveja", file:"https://sfxmint.com/dl/sheep-bleat-02.mp3", emoji:"🐑"},
+  {name:"el caballo", file:"https://sfxmint.com/dl/horse-neigh-03.mp3", emoji:"🐴"},
+  {name:"el gallo", file:"https://sfxmint.com/dl/rooster-crow-02.mp3", emoji:"🐓"},
+  {name:"la gallina", file:"https://sfxmint.com/dl/hen-cluck-02.mp3", emoji:"🐔"},
+  {name:"el pato", file:"https://sfxmint.com/dl/duck-quack-01.mp3", emoji:"🦆"},
+  {name:"el perro", file:"https://sfxmint.com/dl/animal-dog-bark-25.mp3", emoji:"🐶"},
+  {name:"el gato", file:"https://sfxmint.com/dl/animal-cat-meow-34.mp3", emoji:"🐱"},
+  {name:"el pajarito", file:"https://sfxmint.com/dl/animal-bird-24.mp3", emoji:"🐦"}
+];
+const startBtn=document.getElementById("start");
+const statusEl=document.getElementById("status");
+const timerEl=document.getElementById("timer");
+let stopped=false, currentAudio=null, timerInterval=null;
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function say(text){
+  return new Promise(resolve=>{
+    if(!("speechSynthesis" in window)){statusEl.textContent=text;resolve();return;}
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="es-ES"; u.rate=.88; u.pitch=1.05;
+    u.onend=resolve; u.onerror=resolve;
+    speechSynthesis.speak(u);
+  });
+}
+async function playSound(a){
+  return new Promise(resolve=>{
+    currentAudio=new Audio(a.file);
+    currentAudio.onended=resolve;
+    currentAudio.onerror=resolve;
+    currentAudio.play().catch(resolve);
+    setTimeout(()=>{if(currentAudio && !currentAudio.ended){currentAudio.pause();resolve();}},6500);
+  });
+}
+startBtn.addEventListener("click",async()=>{
+  if(startBtn.disabled)return;
+  stopped=false; startBtn.disabled=true;
+  const end=Date.now()+120000;
+  timerInterval=setInterval(()=>{
+    const left=Math.max(0,end-Date.now());
+    timerEl.textContent=`${String(Math.floor(left/60000)).padStart(2,"0")}:${String(Math.floor((left%60000)/1000)).padStart(2,"0")}`;
+    if(left===0)clearInterval(timerInterval);
+  },250);
+  await say("¡Vamos a escuchar los animales de la granja!");
+  for(let i=0;i<animals.length && Date.now()<end;i++){
+    const a=animals[i];
+    if(stopped)break;
+    statusEl.textContent="Escucha… ¿quién será?";
+    await playSound(a);
+    if(stopped)break;
+    await say("¡Es "+a.name+"!");
+    await wait(1800);
+  }
+  const left=end-Date.now();
+  if(left>0)await wait(left);
+  clearInterval(timerInterval);
+  timerEl.textContent="02:00";
+  statusEl.textContent="¡Muy bien! ¡Has descubierto los animales!";
+  await say("¡Muy bien! Has descubierto los animales de la granja. ¡Hasta pronto!");
+  startBtn.disabled=false;
+});
+</script>
+</body>
+</html>
