@@ -1,96 +1,37 @@
 <!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>¿Quién vive en la granja?</title>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>La aventura de los sonidos</title>
 <style>
-  body{margin:0;font-family:Arial,sans-serif;background:#fff8e8;color:#3d382e;text-align:center}
-  main{max-width:620px;margin:auto;padding:24px 18px}
-  h1{font-size:2rem;color:#477a45;margin:12px 0}
-  .farm{font-size:3rem;letter-spacing:8px;margin:18px 0}
-  p{font-size:1.15rem;line-height:1.5}
-  button{font-size:1.2rem;font-weight:bold;border:0;border-radius:18px;padding:16px 24px;background:#5b984f;color:white;cursor:pointer}
-  button:disabled{opacity:.55}
-  #status{min-height:3em;margin:22px 0;font-size:1.25rem;font-weight:bold}
-  #timer{font-size:1.5rem;color:#477a45;font-weight:bold}
-  .note{font-size:.9rem;color:#6e685e}
-</style>
-</head>
-<body>
-<main>
-  <div class="farm">🐮 🐷 🐔</div>
-  <h1>¿Quién vive en la granja?</h1>
-  <p>Escucha con atención. ¿Qué animal será? Después de cada sonido, descubrirás la respuesta.</p>
-  <button id="start">▶ EMPEZAR JUEGO</button>
-  <div id="status" aria-live="polite">¡Pulsa para comenzar!</div>
-  <div id="timer">02:00</div>
-  <p class="note">Actividad de escucha · 2 minutos</p>
-</main>
+*{box-sizing:border-box}body{margin:0;background:#fff6e6;color:#3d3a32;font-family:Arial,sans-serif;text-align:center}main{max-width:760px;margin:auto;padding:20px 16px 34px}h1{color:#477d49;font-size:clamp(2rem,6vw,3rem);margin:8px 0}h2{font-size:1.45rem}p{font-size:1.08rem;line-height:1.5}.hero{font-size:clamp(2.8rem,10vw,5rem);margin:8px}.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}.category{border:3px solid transparent;border-radius:22px;padding:20px 10px;min-height:150px;font-size:1.1rem;font-weight:bold;color:#38352f;cursor:pointer}.category span{display:block;font-size:3.3rem;margin-bottom:8px}.farm{background:#e4f2d9}.forest{background:#dcefe3}.nature{background:#dceefa}.home{background:#ffe6ce}.panel{background:white;border-radius:24px;padding:22px 16px;box-shadow:0 4px 18px #55442a12;margin:18px 0}.hidden{display:none!important}button.action{border:0;border-radius:18px;padding:15px 24px;font-size:1.15rem;font-weight:bold;background:#4d8b54;color:white;cursor:pointer;margin:8px}.secondary{background:#77766d!important}#bigEmoji{font-size:5rem;margin:12px}#status{font-size:1.35rem;font-weight:bold;min-height:3.2em;margin:12px auto;max-width:560px}#timer{font-size:1.8rem;font-weight:800;color:#477d49;font-variant-numeric:tabular-nums}.progress{height:12px;background:#eee6d8;border-radius:99px;overflow:hidden;margin:16px 0}#bar{height:100%;width:0;background:#70a85c}.small{font-size:.88rem;color:#716b60}@media(max-width:430px){.menu{gap:10px}.category{padding:16px 6px;min-height:140px;font-size:1rem}.category span{font-size:2.7rem}}
+</style></head><body><main>
+<div class="hero">🎧 🌈 🔎</div><h1>La aventura de los sonidos</h1><p>¡Escucha con atención! Elige un mundo, adivina qué suena y descubre la respuesta.</p>
+<section id="menu"><div class="menu">
+<button class="category farm" data-cat="farm"><span>🐮</span>Animales de la granja</button>
+<button class="category forest" data-cat="forest"><span>🦉</span>Animales del bosque</button>
+<button class="category nature" data-cat="nature"><span>🌧️</span>Sonidos de la naturaleza</button>
+<button class="category home" data-cat="home"><span>🏠</span>Sonidos de la casa</button>
+</div><p class="small">Cada apartado dura 2 minutos.</p></section>
+<section id="ready" class="panel hidden"><div id="readyEmoji" class="hero"></div><h2 id="readyTitle"></h2><p>Escucha el sonido, piensa qué puede ser y espera a oír la solución.</p><button class="action" id="start">▶ EMPEZAR</button><button class="action secondary" id="back">↩ VOLVER AL MENÚ</button></section>
+<section id="game" class="panel hidden"><div id="bigEmoji">👂</div><h2 id="gameTitle"></h2><div id="status" aria-live="polite">¡Prepara tus orejas!</div><div id="timer">02:00</div><div class="progress"><div id="bar"></div></div><button class="action secondary" id="stop">■ PARAR</button><p class="small">Primero escucha. Después descubrirás la respuesta.</p></section>
+<p class="small">Actividad de escucha para Educación Infantil.</p></main>
 <script>
-const animals = [
-  {name:"la vaca", file:"https://sfxmint.com/dl/cow-moo-02.mp3", emoji:"🐮"},
-  {name:"el cerdo", file:"https://sfxmint.com/dl/pig-oink-02.mp3", emoji:"🐷"},
-  {name:"la oveja", file:"https://sfxmint.com/dl/sheep-bleat-02.mp3", emoji:"🐑"},
-  {name:"el caballo", file:"https://sfxmint.com/dl/horse-neigh-03.mp3", emoji:"🐴"},
-  {name:"el gallo", file:"https://sfxmint.com/dl/rooster-crow-02.mp3", emoji:"🐓"},
-  {name:"la gallina", file:"https://sfxmint.com/dl/hen-cluck-02.mp3", emoji:"🐔"},
-  {name:"el pato", file:"https://sfxmint.com/dl/duck-quack-01.mp3", emoji:"🦆"},
-  {name:"el perro", file:"https://sfxmint.com/dl/animal-dog-bark-25.mp3", emoji:"🐶"},
-  {name:"el gato", file:"https://sfxmint.com/dl/animal-cat-meow-34.mp3", emoji:"🐱"},
-  {name:"el pajarito", file:"https://sfxmint.com/dl/animal-bird-24.mp3", emoji:"🐦"}
-];
-const startBtn=document.getElementById("start");
-const statusEl=document.getElementById("status");
-const timerEl=document.getElementById("timer");
-let stopped=false, currentAudio=null, timerInterval=null;
-const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function say(text){
-  return new Promise(resolve=>{
-    if(!("speechSynthesis" in window)){statusEl.textContent=text;resolve();return;}
-    speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang="es-ES"; u.rate=.88; u.pitch=1.05;
-    u.onend=resolve; u.onerror=resolve;
-    speechSynthesis.speak(u);
-  });
-}
-async function playSound(a){
-  return new Promise(resolve=>{
-    currentAudio=new Audio(a.file);
-    currentAudio.onended=resolve;
-    currentAudio.onerror=resolve;
-    currentAudio.play().catch(resolve);
-    setTimeout(()=>{if(currentAudio && !currentAudio.ended){currentAudio.pause();resolve();}},6500);
-  });
-}
-startBtn.addEventListener("click",async()=>{
-  if(startBtn.disabled)return;
-  stopped=false; startBtn.disabled=true;
-  const end=Date.now()+120000;
-  timerInterval=setInterval(()=>{
-    const left=Math.max(0,end-Date.now());
-    timerEl.textContent=`${String(Math.floor(left/60000)).padStart(2,"0")}:${String(Math.floor((left%60000)/1000)).padStart(2,"0")}`;
-    if(left===0)clearInterval(timerInterval);
-  },250);
-  await say("¡Vamos a escuchar los animales de la granja!");
-  for(let i=0;i<animals.length && Date.now()<end;i++){
-    const a=animals[i];
-    if(stopped)break;
-    statusEl.textContent="Escucha… ¿quién será?";
-    await playSound(a);
-    if(stopped)break;
-    await say("¡Es "+a.name+"!");
-    await wait(1800);
-  }
-  const left=end-Date.now();
-  if(left>0)await wait(left);
-  clearInterval(timerInterval);
-  timerEl.textContent="02:00";
-  statusEl.textContent="¡Muy bien! ¡Has descubierto los animales!";
-  await say("¡Muy bien! Has descubierto los animales de la granja. ¡Hasta pronto!");
-  startBtn.disabled=false;
-});
-</script>
-</body>
-</html>
+const data={
+farm:{title:"Animales de la granja",emoji:"🐮",items:[
+["🐮","la vaca","https://sfxmint.com/dl/cow-moo-02.mp3"],["🐷","el cerdo","https://sfxmint.com/dl/pig-oink-02.mp3"],["🐑","la oveja","https://sfxmint.com/dl/sheep-bleat-02.mp3"],["🐴","el caballo","https://sfxmint.com/dl/horse-neigh-03.mp3"],["🐓","el gallo","https://sfxmint.com/dl/rooster-crow-02.mp3"],["🐔","la gallina","https://sfxmint.com/dl/hen-cluck-02.mp3"],["🦆","el pato","https://sfxmint.com/dl/duck-quack-01.mp3"],["🐐","la cabra","https://sfxmint.com/dl/goat-bleat-01.mp3"]]},
+forest:{title:"Animales del bosque",emoji:"🌲",items:[
+["🐺","el lobo","https://sfxmint.com/dl/wolf-howl-02.mp3"],["🦉","el búho","https://sfxmint.com/dl/animal-owl-01.mp3"],["🐦","el pajarito","https://sfxmint.com/dl/animal-bird-24.mp3"],["🐸","la rana","https://sfxmint.com/dl/animal-frog-14.mp3"]]},
+nature:{title:"Sonidos de la naturaleza",emoji:"🌳",items:[
+["🍃","el viento que mueve la hierba","https://sfxmint.com/dl/growth-4ebbb97508bd361b56bfce7d-part-1-v2.mp3"],["🌲","el bosque con pájaros y viento","https://sfxmint.com/dl/growth-a3585cc018b5ba7237b35d4f-part-1-v1.mp3"],["🍂","las hojas de los árboles","https://sfxmint.com/dl/growth-d669a37d4f9b3423686affba-part-1-v1.mp3"],["🌧️","la lluvia en el tejado","https://sfxmint.com/dl/growth-metal-roof-loop-20260919.mp3"],["🐦","los pájaros que cantan","https://sfxmint.com/dl/animal-bird-24.mp3"]]},
+home:{title:"Sonidos de la casa",emoji:"🏠",items:[
+["🔔","el timbre de la puerta","https://sfxmint.com/dl/door-doorbell-02.mp3"],["🚪","una puerta que se abre","https://sfxmint.com/dl/door-open-01.mp3"],["🚰","el agua del grifo","https://sfxmint.com/dl/faucet-01.mp3"],["🚿","el agua que corre por el fregadero","https://sfxmint.com/dl/faucet-02.mp3"]]}
+};
+const $=id=>document.getElementById(id), menu=$("menu"),ready=$("ready"),game=$("game");
+let chosen=null,stopped=false,audio=null,timer=null;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function say(t){return new Promise(resolve=>{if(!("speechSynthesis"in window)){ $("status").textContent=t;resolve();return;}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="es-ES";u.rate=.88;u.pitch=1.04;u.onend=resolve;u.onerror=resolve;speechSynthesis.speak(u);});}
+function play(url){return new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;clearTimeout(fallback);resolve();};audio=new Audio(url);audio.volume=.85;audio.onended=finish;audio.onerror=finish;const fallback=setTimeout(()=>{if(audio)audio.pause();finish();},9000);audio.play().catch(finish);});}
+function silence(){if(audio){audio.pause();audio.currentTime=0;audio=null;}if("speechSynthesis"in window)speechSynthesis.cancel();}
+document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{chosen=data[b.dataset.cat];$("readyEmoji").textContent=chosen.emoji;$("readyTitle").textContent=chosen.title;menu.classList.add("hidden");game.classList.add("hidden");ready.classList.remove("hidden");});
+$("back").onclick=()=>{ready.classList.add("hidden");menu.classList.remove("hidden");};
+$("stop").onclick=()=>{stopped=true;silence();clearInterval(timer);game.classList.add("hidden");menu.classList.remove("hidden");};
+$("start").onclick=async()=>{if(!chosen)return;stopped=false;ready.classList.add("hidden");game.classList.remove("hidden");$("gameTitle").textContent=chosen.title;const total=120000,end=Date.now()+total;$("timer").textContent="02:00";$("bar").style.width="0%";timer=setInterval(()=>{let left=Math.max(0,end-Date.now()),s=Math.ceil(left/1000);$("timer").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");$("bar").style.width=((total-left)/total*100)+"%";},250);await say("¡Vamos a escuchar! ¿Qué será?");let i=0;while(!stopped&&Date.now()<end){let item=chosen.items[i%chosen.items.length];$("bigEmoji").textContent="👂";$("status").textContent="Escucha con atención… ¿qué será?";await play(item[2]);if(stopped||Date.now()>=end)break;await wait(700);$("bigEmoji").textContent=item[0];$("status").textContent="¡Vamos a descubrirlo!";await say("¡Es "+item[1]+"!");i++;if(stopped||Date.now()>=end)break;await wait(1200);}if(!stopped){clearInterval(timer);$("timer").textContent="00:00";$("bar").style.width="100%";$("bigEmoji").textContent="⭐";$("status").textContent="¡Muy bien! ¡Has escuchado todos los sonidos!";await say("¡Muy bien! Has escuchado todos los sonidos. ¡Buen trabajo!");await wait(900);game.classList.add("hidden");menu.classList.remove("hidden");}};
+</script></body></html>
